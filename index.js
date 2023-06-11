@@ -18,50 +18,62 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
 
 
 
-    const classCollection = client.db("melodyMinds").collection("classes");
-    const cartCollection = client.db("melodyMinds").collection("carts");
+        const classCollection = client.db("melodyMinds").collection("classes");
+        const cartCollection = client.db("melodyMinds").collection("carts");
 
 
 
-    // get all classes
-    app.get('/classes', async(req, res) => {
-        const result = await classCollection.find().toArray();
-        res.send(result)
-    })
+        // get all classes
+        app.get('/classes', async (req, res) => {
+            const result = await classCollection.find().toArray();
+            res.send(result)
+        })
 
 
-    // select cart collection
-    app.post('/carts', async(req, res) => {
-        const showClass = req.body;
-        console.log(showClass);
-        const result = await cartCollection.insertOne(showClass);
-        res.send(result)
-    })
+        // api for cart collection
+        app.get('/carts', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+              return  res.send([])
+            }
+            const query = { email: email }
+            const result = await cartCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        // select cart collection
+        app.post('/carts', async (req, res) => {
+            const showClass = req.body;
+            console.log(showClass);
+            const result = await cartCollection.insertOne(showClass);
+            res.send(result)
+        })
 
 
 
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
@@ -70,7 +82,7 @@ run().catch(console.dir);
 
 
 
-app.get('/',  (req, res) => {
+app.get('/', (req, res) => {
     res.send('Summer is going on melody minds school')
 })
 
