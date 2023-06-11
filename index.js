@@ -33,12 +33,24 @@ async function run() {
 
 
     const classCollection = client.db("melodyMinds").collection("classes");
+    const cartCollection = client.db("melodyMinds").collection("carts");
 
+
+
+    // get all classes
     app.get('/classes', async(req, res) => {
         const result = await classCollection.find().toArray();
         res.send(result)
     })
 
+
+    // select cart collection
+    app.post('/carts', async(req, res) => {
+        const showClass = req.body;
+        console.log(showClass);
+        const result = await cartCollection.insertOne(showClass);
+        res.send(result)
+    })
 
 
 
