@@ -35,7 +35,15 @@ async function run() {
 
         const classCollection = client.db("melodyMinds").collection("classes");
         const cartCollection = client.db("melodyMinds").collection("carts");
+        const userCollection = client.db("melodyMinds").collection("users");
 
+
+        // user api
+        app.post('/users', async(req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
 
 
         // get all classes
