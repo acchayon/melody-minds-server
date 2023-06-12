@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config()
+const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -47,9 +48,8 @@ async function run() {
         // api for cart collection
         app.get('/carts', async (req, res) => {
             const email = req.query.email;
-            console.log(email);
             if (!email) {
-              return  res.send([])
+                return res.send([])
             }
             const query = { email: email }
             const result = await cartCollection.find(query).toArray();
@@ -61,6 +61,14 @@ async function run() {
             const showClass = req.body;
             console.log(showClass);
             const result = await cartCollection.insertOne(showClass);
+            res.send(result)
+        })
+
+        // delete cart
+        app.delete('/carts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await cartCollection.deleteOne(query)
             res.send(result)
         })
 
