@@ -61,14 +61,24 @@ async function run() {
         // for jwt
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_WEB_TOKEN, { expiresIn: '1h' })
+            const token = jwt.sign(user, process.env.ACCESS_WEB_TOKEN, { expiresIn: '5h' })
             res.send({ token })
         })
+
+        const verifyAdmin = async (req, res) => {
+            const email = req.decoded.email;
+            const query = {email: email}
+            const user = await userCollection.findOne(query)
+            if(user?.role !== 'admin'){
+                res.status(403).send({error: true, message: 'forbidden'})
+            }
+            next();
+        }
 
 
         // user api
 
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result)
         })
@@ -105,6 +115,12 @@ async function run() {
         // get all classes
         app.get('/classes', async (req, res) => {
             const result = await classCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.post('/classes', async (req, res) => {
+            const newClass = req.body;
+            const result = await classCollection.insertOne(newClass)
             res.send(result)
         })
 
@@ -152,6 +168,8 @@ async function run() {
             const result = await cartCollection.deleteOne(query)
             res.send(result)
         })
+
+        
 
 
 
