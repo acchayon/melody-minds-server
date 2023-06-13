@@ -13,7 +13,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 app.use(express.json())
 app.use(cors())
 
-// veriy jwt token
+// verify jwt token
 const verifyJWT = (req, res, next) => {
     const authorization = req.headers.authorization;
     if (!authorization) {
@@ -65,7 +65,7 @@ async function run() {
             res.send({ token })
         })
 
-        const verifyAdmin = async (req, res) => {
+        const verifyAdmin = async (req, res, next) => {
             const email = req.decoded.email;
             const query = {email: email}
             const user = await userCollection.findOne(query)
@@ -118,10 +118,18 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/classes', async (req, res) => {
+        app.post('/classes', verifyJWT, verifyAdmin,  async (req, res) => {
             const newClass = req.body;
             const result = await classCollection.insertOne(newClass)
             res.send(result)
+        })
+
+        app.delete('/classes/:id',verifyJWT, verifyAdmin,async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await classCollection.deleteOne(query);
+            res.send(result)
+
         })
 
 
