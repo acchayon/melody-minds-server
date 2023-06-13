@@ -13,6 +13,25 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 app.use(express.json())
 app.use(cors())
 
+// veriy jwt token
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+        return res.status(401).send({ error: true, message: 'Unauthrized access here' })
+    }
+
+    // bearer token
+    const token = authorization.split(' ')[1]
+
+    jwt.verify(token, process.env.ACCESS_WEB_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ error: true, message: 'Unauthrized access here' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 
 
 
@@ -91,13 +110,30 @@ async function run() {
 
 
         // api for cart collection
-        app.get('/carts', async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
+
             if (!email) {
                 return res.send([])
             }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(401).send({ error: true, message: 'Forbidden access here' })
+            }
             const query = { email: email }
             const result = await cartCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ admin: false })
+            }
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            const result = { admin: user?.role === 'admin' }
             res.send(result)
         })
 
