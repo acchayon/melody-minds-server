@@ -4,6 +4,7 @@ const app = express();
 require('dotenv').config()
 const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 
@@ -36,6 +37,14 @@ async function run() {
         const classCollection = client.db("melodyMinds").collection("classes");
         const cartCollection = client.db("melodyMinds").collection("carts");
         const userCollection = client.db("melodyMinds").collection("users");
+
+
+        // for jwt
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_WEB_TOKEN, { expiresIn: '1h' })
+            res.send({ token })
+        })
 
 
         // user api
