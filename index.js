@@ -48,13 +48,14 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
 
 
         const classCollection = client.db("melodyMinds").collection("classes");
         const cartCollection = client.db("melodyMinds").collection("carts");
         const userCollection = client.db("melodyMinds").collection("users");
+        const paymentCollection = client.db("melodyMinds").collection("payments");
 
 
         // for jwt
@@ -181,7 +182,7 @@ async function run() {
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const { price } = req.body;
             const amount = price * 100;
-        
+
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
                 currency: 'usd',
@@ -190,20 +191,16 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret
             })
-
-
-
-            // const paymentIntent = await stripe.paymentIntents.create({
-            //     amount: amount,
-            //     currency: "usd",
-            //     payment_method_types: ['cards']
-
-            //   });
-            //   res.send({
-            //     clientSecret: paymentIntent.client_secret
-            //   })
         })
 
+        // payment api
+        app.post('/payments', verifyJWT, async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollection.insertOne(payment)
+            const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+            const deleteResult = await cartCollection.deleteMany(query)
+            res.send({insertResult, deleteResult})
+        })
 
 
 
